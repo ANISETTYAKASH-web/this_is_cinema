@@ -1,11 +1,20 @@
+import { use_movie_context } from "../contexts/MovieContext";
+
 function MovieCard({ movie }) {
-  function onFavouriteClicked() {
-    alert("clicked");
+  const { isfav, remfav, addfav } = use_movie_context();
+  const fav = isfav(movie.id);
+  function onFavouriteClicked(e) {
+    e.preventDefault();
+    if (fav) remfav(movie.id);
+    else addfav(movie);
   }
   return (
     <div>
       <div className="movie-poster">
-        <img src="movie.url" alt={movie.title} />
+        <img
+          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+          alt={movie.title}
+        />
         <div className="favourites">
           <button className="fav-button" onClick={onFavouriteClicked}>
             😍
@@ -14,7 +23,7 @@ function MovieCard({ movie }) {
       </div>
       <div className="movie-info">
         <h2>{movie.title}</h2>
-        <p>{movie.release_year}</p>
+        <p>{movie.release_date}</p>
       </div>
     </div>
   );

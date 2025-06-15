@@ -1,53 +1,66 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MovieCard from "../components/MovieCards";
+import { getPopularMovies, searchMovies } from "../services/app";
 
 function Home() {
-  const movies = [
-    {
-      id: 1,
-      title: "RRR",
-      release_date: 2023,
-    },
-    {
-      id: 2,
-      title: "Bahubali",
-      release_date: 2018,
-    },
-    {
-      id: 3,
-      title: "Khaleja",
-      release_date: 2009,
-    },
-  ];
-  const [moviestate, setmoviestate] = useState("");
-  const handleSearch = (e) => {
+  const [movielist, setmovielist] = useState([]);
+  const [moviesearch, setmoviesearch] = useState("");
+  const [Error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const get_movies_from_api = async () => {
+      try {
+        const get_popular_movies = await getPopularMovies();
+        setmovielist(get_popular_movies);
+      } catch (err) {
+        console.log(err);
+        setError("failed to load movies from api");
+      } finally {
+        setLoading(false);
+      }
+    };
+    get_movies_from_api();
+  }, []);
+  const handlesearch = async (e) => {
     e.preventDefault();
-    alert(moviestate);
+    if (!moviesearch.trim()) return;
+    if (loading) return;
+    try {
+      const search_results = await searchMovies(moviesearch);
+      setmovielist(search_results);
+      setError(null);
+    } catch (err) {
+      console.log(err);
+      setError("failed to load movies");
+    } finally {
+      setLoading(false);
+    }
   };
-
   return (
     <>
       <div className="search-bar">
-        <form className="search-form" onSubmit={handleSearch}>
+        <form className="search-form" onSubmit={handlesearch}>
           <input
             type="text"
             placeholder="enter a movie name..."
             className="search-input"
-            value={moviestate}
-            onChange={(e) => setmoviestate(e.target.value)}
+            value={moviesearch}
+            onChange={(e) => setmoviesearch(e.target.value)}
           />
           <button>Search</button>
         </form>
       </div>
-
-      <div className="movie-grid">
-        {movies.map(
-          (movie) =>
-            movie.title.toLowerCase().startsWith(moviestate) && (
-              <MovieCard movie={movie} key={movie.id} />
-            )
-        )}
-      </div>
+      {Error && <div>{Error}</div>}
+      {console.log(Error)}
+      {loading ? (
+        <div className="loading">loading.....</div>
+      ) : (
+        <div className="movie-grid">
+          {movielist.map((movie) => (
+            <MovieCard movie={movie} key={movie.id} />
+          ))}
+        </div>
+      )}
     </>
   );
 }
